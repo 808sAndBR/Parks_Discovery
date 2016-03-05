@@ -4,10 +4,10 @@ parks <- read_csv('data/Recreation___Park_Department_Park_Info_Dataset.csv')
 
 
 # Things I want to fix:
+#   Remove double header row
 #   Get missing location data
-#   Get street numbers for the missing (reverse geo code)
 #   Split Lat and Long into own columns
-#   Remove double header bar
+#   Get street numbers for the missing (reverse geo code)
 
 
 # remove extra header row
@@ -87,4 +87,37 @@ parks$Lat <- gsub( '.*[(]','', parks$`Location 1`) %>%
 parks$Long <- gsub( '.*[, ]','',parks$`Location 1`) %>%
     gsub('[)].*','',.)
 
-View(parks)
+write_csv(parks, 'data/cleaned_parks_info.csv')
+
+
+quantile(parks$Acreage, c(.2,.4,.6,.8,1))
+test <- function(row){
+    if(row['Acreage'] <.210){
+            'size_tiny'
+        }else if(row['Acreage']  > .210 & row['Acreage'] < .800){
+            'size_small'
+        }else if(row['Acreage']  > .800 & row['Acreage'] < 2.186){
+            'size_average'
+        }else if(row['Acreage']  > 2.186 & row['Acreage'] < 6.266){
+            'size_large'
+        }else{
+            'size_huge'
+        }
+}
+
+park_size <- c()
+for(x in 1: nrow(parks)){
+    park_size <- c(park_size,test(parks[x,]))
+    
+}
+
+parks$size <- park_size
+
+# read in data for mapping to neighborhoods
+zip2hood <- read_csv('data/zipcode_to_neighborhood.csv')
+
+# This will drop the sections of Golden Gate, fine for our use
+parks_neighborhoods <- merge(parks, zip2hood, by.x='Zipcode', by.y='zipcode')
+
+write_csv(parks_neighborhoods, 'data/parks_info_with_size_neighborhood.csv')
+
