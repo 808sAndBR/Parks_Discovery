@@ -15,12 +15,16 @@ class Command(BaseCommand):
         with open(filepath, 'r') as park_file:
             reader = csv.DictReader(park_file)
             for row in reader:
-                park, created = Park.objects.get_or_create(park_id=int(row['ParkID']), 
-                    name=row['ParkName'].title(), neighborhood=row['neighborhood'], 
+                park, created = Park.objects.get_or_create(
+                    park_id=int(row['ParkID']), 
+                    name=row['ParkName'].title(), 
+                    neighborhood=row['neighborhood'], 
                     psa_manager=row['PSAManager'], zipcode=row['Zipcode'],
-                    park_service_area=row['ParkServiceArea'], phone_number=row['Number'],
+                    park_service_area=row['ParkServiceArea'], 
+                    phone_number=row['Number'],
                     park_type=row['ParkType'], acreage=float(row['Acreage']),
-                    email=row['email'], address=row['Location 1'], size=row['size']
+                    email=row['email'], address=row['Location 1'], 
+                    size=row['size']
                 )
                 if created:
                     if row['SupDist'] != 'NA':
@@ -31,6 +35,8 @@ class Command(BaseCommand):
                         park.longitude = Decimal(row['Long'])
                         park.save()
 
-                    self.stdout.write(self.style.SUCCESS('Successfully created park: "%s"' % park.name))
+                    self.stdout.write(self.style.SUCCESS(
+                        'Successfully created park: "%s"' % park.name))
                 else:
-                    self.stdout.write(self.style.SUCCESS('Park already exists: "%s"' % park.name))
+                    self.stdout.write(self.style.SUCCESS(
+                        'Park already exists: "%s"' % park.name))
