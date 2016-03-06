@@ -22,4 +22,5 @@ from . import views
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', views.index, name='index'),
+    url(r'^park/(?P<pid>[0-9]+)', views.similar_parks, name='similar_parks'),
 ]
