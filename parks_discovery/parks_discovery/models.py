@@ -21,7 +21,7 @@ class Park(models.Model):
 class ParkSimilarityRanking(models.Model):
     park = models.ForeignKey(Park, db_index=True)
     similar_park = models.ForeignKey(Park, related_name="parks")
-    similarity_value = models.IntegerField(default=0)
+    similarity_value = models.FloatField(default=0)
 
 
 class ParkAttribute(models.Model):
