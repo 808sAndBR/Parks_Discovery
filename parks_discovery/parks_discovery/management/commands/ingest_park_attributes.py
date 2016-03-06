@@ -4,7 +4,7 @@ from parks_discovery.models import Park, ParkAttribute
 
 
 class Command(BaseCommand):
-    help = 'Ingests Park CSV content to create Park models.'
+    help = 'Add Park Attributes to Park Attribute DB.'
 
     def handle(self, *args, **options):
         for park in Park.objects.all():
@@ -12,25 +12,31 @@ class Command(BaseCommand):
             neighborhood = park.neighborhood
             size = park.size
             attribute, created = ParkAttribute.objects.get_or_create(
-                park = park,
-                attribute = park_type)
+                park=park,
+                attribute=park_type)
             if created:
-                self.stdout.write(self.style.SUCCESS('Successfully created park: "%s" attribute:%s' % (attribute.park.name, attribute.attribute)))
+                self.stdout.write(self.style.SUCCESS('Successfully created park: "%s" attribute:%s' % (
+                    attribute.park.name, attribute.attribute)))
             else:
-                self.stdout.write(self.style.SUCCESS('Park: "%s" attribute:%s, already exists' % (attribute.park.name, attribute.attribute)))
+                self.stdout.write(self.style.SUCCESS('Park: "%s" attribute:%s, already exists' % (
+                    attribute.park.name, attribute.attribute)))
 
             attribute, created = ParkAttribute.objects.get_or_create(
-                park = park,
-                attribute = neighborhood)
+                park=park,
+                attribute=neighborhood)
             if created:
-                self.stdout.write(self.style.SUCCESS('Successfully created park: "%s" attribute:%s' % (attribute.park.name, attribute.attribute)))
+                self.stdout.write(self.style.SUCCESS('Successfully created park: "%s" attribute:%s' % (
+                    attribute.park.name, attribute.attribute)))
             else:
-                self.stdout.write(self.style.SUCCESS('Park: "%s" attribute:%s, already exists' % (attribute.park.name, attribute.attribute)))
+                self.stdout.write(self.style.SUCCESS('Park: "%s" attribute:%s, already exists' % (
+                    attribute.park.name, attribute.attribute)))
 
             attribute, created = ParkAttribute.objects.get_or_create(
-                park = park,
-                attribute = size)
+                park=park,
+                attribute=size)
             if created:
-                self.stdout.write(self.style.SUCCESS('Successfully created park: "%s" attribute:%s' % (attribute.park.name, attribute.attribute)))
+                self.stdout.write(self.style.SUCCESS('Successfully created park: "%s" attribute:%s' % (
+                    attribute.park.name, attribute.attribute)))
             else:
-                self.stdout.write(self.style.SUCCESS('Park: "%s" attribute:%s, already exists' % (attribute.park.name, attribute.attribute)))
+                self.stdout.write(self.style.SUCCESS('Park: "%s" attribute:%s, already exists' % (
+                    attribute.park.name, attribute.attribute)))
