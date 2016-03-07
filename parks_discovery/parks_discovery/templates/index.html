@@ -8,17 +8,20 @@
 <link href='https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.css' rel='stylesheet' />
 <style>
   body { margin:0; padding:0; }
-  #map { position: absolute; top: 100px; bottom: 0px; width:  100%; }
-  .searchForm { z-index: 5000; }
+  #map { position: absolute; top: 0px; bottom: 0px; width:  100%; }
+  .searchFormDiv { z-index: 5000; position: absolute; bottom: 90px; width: 340px; height: 35px; left:35%;right:20%; padding: 10px; background-color: #7E7E7E; color:white;opacity: .85;border-radius: 20px;}
+  .searchForm {position: relative; width:320px; margin-left:auto; margin-right:auto;padding: 4px;margin: 4px;}
 </style>
 </head>
 <body>
 
-<form method="post" class="searchForm">
-    {% csrf_token %}
-    {{ form }}
-    <input type="submit" value="Search" />
-</form>
+<div class="searchFormDiv">
+  <form method="post" class="searchForm">
+      {% csrf_token %}
+      {{ form }}
+      <input type="submit" value="Search" />
+  </form>
+</div>
 
 <div id='map'></div>
 
