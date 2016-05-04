@@ -6,6 +6,7 @@
 		<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 		<script src='https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.js'></script>
 		<link href='https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.css' rel='stylesheet' />
+		<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
 		<style>
 		  body { margin:0; padding:0; }
 		  #map { position: absolute; top: 0px; bottom: 0px; width:  100%; }
@@ -18,6 +19,40 @@
     <body>
         {% block content %}
 		{% endblock %}
+
+		<div>
+		    <nav class="navbar navbar-default">
+		    <div class="container-fluid">
+		        <div class="navbar-header">
+		        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+		            <span class="sr-only">Toggle navigation</span>
+		            <span class="icon-bar"></span>
+		            <span class="icon-bar"></span>
+		            <span class="icon-bar"></span>
+		        </button>
+		      <a class="navbar-brand" href="/">Parks Discovery</a>
+		    </div>
+
+		        <!-- Collect the nav links, forms, and other content for toggling -->
+		        <!-- This is the lefthand menu -->
+		        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+		            <ul class="nav navbar-nav">
+		                <li ><a href="/">Home</a></li>
+		                <li><a href="/event_list">Popular Parks</a></li>
+		                 
+		            </ul>
+		          
+		          <!-- This the righthand menu -->
+		            <ul class="nav navbar-nav navbar-right">
+		                <li><a href="/user_login">Login</a></li>
+		                <li><a href="/">Log Out</a></li>
+
+		            
+		            </ul>
+		        </div> <!-- /.navbar-collapse -->
+		    </div>
+		    </nav>
+	  </div>
 		
 		<script>
 			L.mapbox.accessToken = 'pk.eyJ1IjoicGhyZW5jaHBocnkxMSIsImEiOiJjaWxmbmd3M3kxdXg0dHZrcG1iMG1temFpIn0.80STPODwSRA9mwAlEHOaUQ';
