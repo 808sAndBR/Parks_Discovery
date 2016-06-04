@@ -24,4 +24,5 @@ urlpatterns = [
     url(r'^$', views.index, name='index'),
     url(r'^park/(?P<pid>[0-9]+)', views.similar_parks, name='similar_parks'),
     url(r'^api/autofill_parks/', views.autofill_parks, name='autofill_parks'),
+    url(r'^api/search_similar_parks/', views.search_similar_parks, name='search_similar_parks'),
 ]

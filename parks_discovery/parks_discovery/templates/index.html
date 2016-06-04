@@ -1,51 +1,122 @@
 {% extends "base.html" %}
 {% block content %}
 
-	<div class="searchFormDiv">
-	  <form method="post" class="searchForm">
-	      {% csrf_token %}
-	      {{ form }}
-	      <input type="submit" value="Search" />
-	  </form>
-	</div>
+    <div class="searchFormDiv">
+      <form class="searchForm">
+        <input id="id_park_name" maxlength="200" name="park_name" type="text" class="ui-autocomplete-input" role="textbox" aria-autocomplete="list" aria-haspopup="true">
+        <input type="submit" value="Search" class="searchButton"/>
+      </form>
+    </div>
 
-	<div id='map'></div>
+    <div id='map'></div>
 
-	<script>
-		$(function() {
-		  $("#id_park_name").autocomplete({
-		    source: "/api/autofill_parks/",
-		    minLength: 2,
-		  });
-		});
+    <script>
+    L.mapbox.accessToken = 'pk.eyJ1IjoicGhyZW5jaHBocnkxMSIsImEiOiJjaWxmbmd3M3kxdXg0dHZrcG1iMG1temFpIn0.80STPODwSRA9mwAlEHOaUQ'; 
+    Window.map = L.mapbox.map('map', 'mapbox.streets')
+           .setView([37.773972, -122.431297], 14); // Center of San Francisco
+    Window.layerGroup = L.layerGroup().addTo(Window.map);
 
-		L.mapbox.accessToken = 'pk.eyJ1IjoicGhyZW5jaHBocnkxMSIsImEiOiJjaWxmbmd3M3kxdXg0dHZrcG1iMG1temFpIn0.80STPODwSRA9mwAlEHOaUQ';
-		var map = L.mapbox.map('map', 'mapbox.streets')
-		   .setView([37.773972, -122.431297], 14); // Center of San Francisco
-		{% for park in parks.all %}
-		    L.mapbox.featureLayer({
-		        // this feature is in the GeoJSON format: see geojson.org
-		        // for the full specification
-		        type: 'Feature',
-		        geometry: {
-		            type: 'Point',
-		            // coordinates here are in longitude, latitude order because
-		            // x, y is the standard for GeoJSON and many formats
-		            coordinates: [
-		              {{ park.longitude }},
-		              {{ park.latitude }}
-		            ]
-		        },
-		        properties: {
-		            title: "{{ park.name }}",
-		            // https://www.mapbox.com/guides/an-open-platform/#simplestyle
-		            'marker-size': 'large',
-		            'marker-color': '#BE9A6B',
-		            'marker-symbol': 'park'
-		        }
-		    }).addTo(map);
-		{% endfor %}
-	</script>
+    $(function(){
+
+        // Create group for your layers and add it to the map
+        {% for park in parks.all %}
+            L.mapbox.featureLayer({
+                // this feature is in the GeoJSON format: see geojson.org
+                // for the full specification
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    // coordinates here are in longitude, latitude order because
+                    // x, y is the standard for GeoJSON and many formats
+                    coordinates: [
+                      {{ park.longitude }},
+                      {{ park.latitude }}
+                    ]
+                },
+                properties: {
+                    title: "{{ park.name }}",
+                    // https://www.mapbox.com/guides/an-open-platform/#simplestyle
+                    'marker-size': 'large',
+                    'marker-color': '#BE9A6B',
+                    'marker-symbol': 'park'
+                }
+            }).addTo(Window.layerGroup);
+        {% endfor %}
+    }); 
+
+    $("#id_park_name").autocomplete({
+        source: "/api/autofill_parks/",
+        minLength: 2,
+    });
+        
+
+    function submitSearchForm(form) {
+        var url = "/api/search_similar_parks/";
+        var formData = {
+            'csrfmiddlewaretoken': '{{ csrf_token }}',
+            'park_name': $("#id_park_name").val()
+        };
+        $.post(url, formData).done(function (data) {
+            Window.layerGroup.clearLayers();
+            Window.layerGroup = L.layerGroup().addTo(Window.map);
+            for (var i in data.similar_parks) {
+                var park = data.similar_parks[i];
+                var marker = L.mapbox.featureLayer({
+                    // this feature is in the GeoJSON format: see geojson.org
+                    // for the full specification
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        // coordinates here are in longitude, latitude order because
+                        // x, y is the standard for GeoJSON and many formats
+                        coordinates: [
+                            park["longitude"],
+                            park["latitude"]
+                        ]
+                    },
+                    properties: {
+                        title: park["name"],
+                        // https://www.mapbox.com/guides/an-open-platform/#simplestyle
+                        'marker-size': 'large',
+                        'marker-color': '#BE9A6B',
+                        'marker-symbol': 'park'
+                    }
+                })
+                marker.addTo(Window.layerGroup);
+            }
+            if (data.park != null) {
+                L.mapbox.featureLayer({
+                // this feature is in the GeoJSON format: see geojson.org
+                // for the full specification
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    // coordinates here are in longitude, latitude order because
+                    // x, y is the standard for GeoJSON and many formats
+                    coordinates: [
+                      data.park["longitude"],
+                      data.park["latitude"]
+                    ]
+                },
+                properties: {
+                    title: data.park["name"],
+                    // description: '1718 14th St NW, Washington, DC',
+                    // one can customize markers by adding simplestyle properties
+                    // https://www.mapbox.com/guides/an-open-platform/#simplestyle
+                    'marker-size': 'large',
+                    'marker-color': '#000000',
+                    'marker-symbol': 'park'
+                }
+                }).addTo(Window.layerGroup);     
+            }   
+        });
+    };
+
+    $(".searchForm").submit(function() {
+        submitSearchForm($(".searchForm"));
+        return false;
+    });
+    </script>
 
 {% endblock %}
 

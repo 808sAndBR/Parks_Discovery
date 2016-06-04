@@ -21,34 +21,5 @@
     <body>
         {% block content %}
         {% endblock %}
-        
-        <script>
-            L.mapbox.accessToken = 'pk.eyJ1IjoicGhyZW5jaHBocnkxMSIsImEiOiJjaWxmbmd3M3kxdXg0dHZrcG1iMG1temFpIn0.80STPODwSRA9mwAlEHOaUQ';
-            var map = L.mapbox.map('map', 'mapbox.streets')
-               .setView([37.773972, -122.431297], 14); // Center of San Francisco
-            {% for park in parks.all %}
-                L.mapbox.featureLayer({
-                    // this feature is in the GeoJSON format: see geojson.org
-                    // for the full specification
-                    type: 'Feature',
-                    geometry: {
-                        type: 'Point',
-                        // coordinates here are in longitude, latitude order because
-                        // x, y is the standard for GeoJSON and many formats
-                        coordinates: [
-                          {{ park.longitude }},
-                          {{ park.latitude }}
-                        ]
-                    },
-                    properties: {
-                        title: "{{ park.name }}",
-                        // https://www.mapbox.com/guides/an-open-platform/#simplestyle
-                        'marker-size': 'large',
-                        'marker-color': '#BE9A6B',
-                        'marker-symbol': 'park'
-                    }
-                }).addTo(map);
-            {% endfor %}
-        </script>
     </body>
 </html>
