@@ -12,6 +12,13 @@
 	<div id='map'></div>
 
 	<script>
+		$(function() {
+		  $("#id_park_name").autocomplete({
+		    source: "/api/autofill_parks/",
+		    minLength: 2,
+		  });
+		});
+
 		L.mapbox.accessToken = 'pk.eyJ1IjoicGhyZW5jaHBocnkxMSIsImEiOiJjaWxmbmd3M3kxdXg0dHZrcG1iMG1temFpIn0.80STPODwSRA9mwAlEHOaUQ';
 		var map = L.mapbox.map('map', 'mapbox.streets')
 		   .setView([37.773972, -122.431297], 14); // Center of San Francisco

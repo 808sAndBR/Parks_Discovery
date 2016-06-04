@@ -1,3 +1,5 @@
+import json
+
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 
@@ -10,8 +12,10 @@ def index(request):
         form = ParkSearchForm(request.POST)
         if form.is_valid():
             park_name = form.cleaned_data['park_name']
-            park_id = Park.objects.get(name=park_name).id
-            return HttpResponseRedirect('/park/%d' % park_id)
+            park = Park.objects.filter(name=park_name).first()
+            if park is not None:
+                park_id = park.id
+                return HttpResponseRedirect('/park/%d' % park_id)
     else:
         form = ParkSearchForm()
 
@@ -40,3 +44,22 @@ def similar_parks(request, pid):
         'similar_parks': parks
     }
     return HttpResponse(template.render(context, request))
+
+
+def autofill_parks(request):
+    if request.is_ajax():
+        query = request.GET.get('term', '')
+        parks = Park.objects.filter(name__icontains=query)[:10]
+        results = []
+        for park in parks:
+            park_json = {}
+            park_json['id'] = park.id
+            park_json['label'] = park.name
+            park_json['value'] = park.name
+            results.append(park_json)
+        data = json.dumps(results)
+    else:
+        raise Exception("Error making parks autofill request.")
+    mimetype = 'application/json'
+    print data
+    return HttpResponse(data, mimetype)
