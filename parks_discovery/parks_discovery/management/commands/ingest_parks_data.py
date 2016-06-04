@@ -18,14 +18,14 @@ class Command(BaseCommand):
             reader = csv.DictReader(park_file)
             for row in reader:
                 park, created = Park.objects.get_or_create(
-                    park_id=int(row['ParkID']), 
-                    name=row['ParkName'].title(), 
-                    neighborhood=row['neighborhood'], 
+                    park_id=int(row['ParkID']),
+                    name=row['ParkName'].title(),
+                    neighborhood=row['neighborhood'],
                     psa_manager=row['PSAManager'], zipcode=row['Zipcode'],
-                    park_service_area=row['ParkServiceArea'], 
+                    park_service_area=row['ParkServiceArea'],
                     phone_number=row['Number'],
                     park_type=row['ParkType'], acreage=float(row['Acreage']),
-                    email=row['email'], address=row['Location 1'], 
+                    email=row['email'], address=row['Location 1'],
                     size=row['size']
                 )
                 if created:

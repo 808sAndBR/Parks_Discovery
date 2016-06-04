@@ -1,4 +1,7 @@
-# setwd("scottbrenstuhl/Projects/Parks_Discovery")
+# setwd("Projects/Parks_Discovery")
+library(readr)
+library(dplyr)
+
 parks <- read_csv('data/parks_info_with_size_neighborhood.csv')
 feature_data <- read_csv('parks_review.csv')
 
@@ -14,10 +17,13 @@ feature_data$`Top or Bottom 10` <- NULL
 
 View(feature_data[!toupper(feature_data$Park) %in% unique(parks$ParkName),])
 
-parks$park_match <- gsub("RECREATION",'REC',parks$ParkName)
+parks$park_match <- parks$ParkName
+feature_data$park_match <- feature_data$Park
+
+parks$park_match <- gsub("RECREATION",'REC',parks$park_match)
 parks$park_match <- gsub("[[:punct:]]", '', parks$park_match)
 
-feature_data$park_match <- toupper(feature_data$Park)
+feature_data$park_match <- toupper(feature_data$park_match)
 feature_data$park_match <- gsub("( \\().*",'',feature_data$park_match)
 feature_data$park_match <- gsub("( AT).*",'',feature_data$park_match)
 feature_data$park_match <- gsub("-", '/' ,feature_data$park_match)
@@ -35,8 +41,6 @@ feature_data$park_match <- gsub("ROOSEVELT  HENRY STAIRS", "ROOSEVELTHENRY STEPS
 feature_data$park_match <- gsub("UTAH18TH STREET MINI PARK", "UTAH18TH MINI PARK", feature_data$park_match)
 feature_data$park_match <- gsub("YACHT HARBOR  MARINA GREEN", "YACHT HARBOR AND MARINA GREEN", feature_data$park_match)
 
-table(unique(gsub("RECREATION",'REC',feature_data$park_match)) %in% unique(gsub("RECREATION",'REC',parks$park_match))) 
-
 View(feature_data[!feature_data$park_match %in% unique(parks$park_match),]%>%
          arrange(park_match))
 
@@ -52,15 +56,13 @@ sort(unique(feature_data[!feature_data$park_match %in% unique(parks$park_match),
 # [9] "GOLDEN GATE PARK  SEC 6"            
 # [17] "SOMA WEST DOG PARK"                 
 # [18] "SOMA WEST SKATEPARK"                
-# [19] "UTAH18TH STREET MINI PARK"          
-# [20] "YACHT HARBOR  MARINA GREEN"  
+
 
 table(unique(feature_data$park_match) %in% unique(parks$park_match))
 sort(unique(parks$park_match))
-View(feature_data)
 
 features_final <- merge(select(parks, ParkName, park_match), 
       select(feature_data, park_match, Feature)) %>%
          select(ParkName, Feature)
 
-write_csv(features_final, 'data/features.csv')
+write_csv(unique(features_final), 'data/features.csv')
