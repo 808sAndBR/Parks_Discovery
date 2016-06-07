@@ -30,6 +30,7 @@ pytz==2015.7
 pyzmq==15.2.0
 requests==2.9.1
 simplegeneric==0.8.1
+simplejson==3.8.2
 singledispatch==3.4.0.3
 six==1.10.0
 terminado==0.6
