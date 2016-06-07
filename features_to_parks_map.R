@@ -74,7 +74,10 @@ feature_data$park_match <- gsub("24TH STREETYORK MINI PARK",
                                 "24THYORK MINI PARK", 
                                 feature_data$park_match)
 
-
+# Potentially remove this if we want to do multiple sections of GGP
+feature_data[grep("(GOLDEN GATE PARK).", feature_data$park_match),]$park_match <- "GOLDEN GATE PARK"
+parks[grep("(GOLDEN GATE PARK).", parks$park_match),]$park_match <- "GOLDEN GATE PARK"
+parks[parks$park_match == "GOLDEN GATE PARK",]$ParkName <- "GOLDEN GATE PARK"
 
 View(feature_data[!feature_data$park_match %in% unique(parks$park_match),]%>%
          arrange(park_match))
