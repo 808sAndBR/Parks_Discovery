@@ -1,0 +1,131 @@
+---
+title: "analysis"
+author: "Scott Brenstuhl"
+date: "June 4, 2016"
+output: html_document
+---
+
+```{r requirments, echo = FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(rgdal)
+library(ggplot2)
+library(ggmap)
+library(maptools)
+
+```
+
+### Getting the data
+
+https://data.sfgov.org/Culture-and-Recreation/Recreation-Park-Department-Park-Info-Dataset/z76i-7s65
+
+http://sfparkscores.weebly.com/feature-scores.html
+
+https://public.tableau.com/vizql/w/ParkScoresv4/v/Features/viewData/sessions/1D8A178C40944FBC93011B5CB095BE4E-0:0/views/4120671465633930416_17547768605657168597?maxrows=200
+
+```{r, echo=FALSE}
+sqlite <- dbDriver("SQLite")
+con <- dbConnect(sqlite, "parks_discovery/db.sqlite3")
+parks <- dbGetQuery(con,
+                    "SELECT * 
+                    FROM parks_discovery_park")
+
+park_attribs <- dbGetQuery(con,
+                    "SELECT * 
+                    FROM parks_discovery_parkattribute")
+
+zip2hood<- read.csv("data/zipcode_to_neighborhood.csv", stringsAsFactors = FALSE)
+
+park_attribs <- park_attribs[!(park_attribs$attribute %in% parks$neighborhood),]
+park_attribs <- park_attribs[!(park_attribs$attribute %in% parks$size),]
+park_attribs <- park_attribs[!(park_attribs$attribute %in% parks$park_type),]
+
+attrib_grid <- table(park_attribs$park_id, park_attribs$attribute)
+attrib_grid <- data.frame(id = rownames(attrib_grid),
+                          as.data.frame.matrix(attrib_grid))
+
+park_data <- merge(parks, attrib_grid,  by= "id", all = TRUE) 
+park_data[is.na(park_data)] <- 0
+
+park_data <- merge(zip2hood, park_data, on = "neighborhood")
+View(park_data)
+```
+
+
+```{r}
+atribs <- names(attrib_grid) %>% 
+    .[.!="id"]
+
+total_atributes <- colSums(park_data[names(park_data) %in% atribs])
+sort(total_atributes/nrow(park_data))
+
+```
+
+Hardscapes are thins like sidewalks, gazibos, non-athletic court concreate slabs (Tank hill)
+
+```{r, echo = FALSE}
+by_neighborhood <- group_by(park_data, neighborhood, zipcode) %>%
+    summarize(count = n(), 
+              tot_acreage = sum(acreage),
+              dog_areas = sum(Dog.Play.Areas)/count,
+              child_areas = sum(Children.s.Play.Areas)/count,
+              courts = sum(Outdoor.Courts)/count,
+              athletic_fields = sum(Athletic.Fields)/count,
+              garden = sum(Community.Garden)/count,
+              mini_parks = sum(Mini.Park)/count,
+              seating = sum(Table.Seating.Areas)/count) %>%
+    arrange(desc(count))
+
+```
+
+```{r, echo=FALSE}
+map<-get_map(location='san francisco', zoom=12, maptype='roadmap')
+ggmap(map)
+ggmap(map)+
+    geom_point(aes(x=longitude, y=latitude),
+                      data=park_data)
+
+sfn <- readOGR("data/sfzipcodes","SFZipCodes") %>%
+    spTransform(CRS("+proj=longlat +datum=WGS84"))
+ggplot(data = sfn, aes(x = long, y = lat, group = group)) + 
+    geom_path()
+
+# names(sfn)
+sfn.f <- sfn %>% fortify(region = 'zip')
+names(sfn)
+# I do not understand this line
+head(sfn@data)
+SFNeighbourhoods <- merge(sfn.f, sfn@data, by = 'id')
+#SFNeighbourhoods <- SFNeighbourhoods[,-15]
+head(SFNeighbourhoods)
+sf <- merge(SFNeighbourhoods, by_neighborhood, 
+            by.x = 'id', by.y= 'zipcode') %>%
+    arrange(order)
+head(sf)
+
+ggplot(sf, aes(long, lat, group = group)) + 
+    geom_polygon(aes(fill = neighborhood))
+
+
+ggmap(map) + 
+    geom_polygon(aes(fill = neighborhood, x = long, y = lat, group = group), 
+                 data = sf,
+                 alpha = 0.8, 
+                 color = "black",
+                 size = 0.2)
+```
+
+
+### Todo:
+Acres of park per mile in each neighborhood (need to map back to zip, file 
+needed is in data dir)
+
+Decide how to deal with Golden gate park more eligantly 
+
+why no review of these parks (or did I drop them at some point)?
+UPDATE: I think I fixed this but should confirm
+parks$name[!(parks$name %in% park_data$name)]
+
+Can I pull in elevation data to guess which parks have the best views?
+
+
+
