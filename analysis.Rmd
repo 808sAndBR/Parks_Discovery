@@ -84,6 +84,9 @@ ggmap(map)+
     geom_point(aes(x=longitude, y=latitude),
                       data=park_data)
 
+# Guide I used 
+#http://www.markhneedham.com/blog/2014/11/17/r-ggmap-overlay-shapefile-with-filled-polygon-of-regions/
+
 sfn <- readOGR("data/sfzipcodes","SFZipCodes") %>%
     spTransform(CRS("+proj=longlat +datum=WGS84"))
 ggplot(data = sfn, aes(x = long, y = lat, group = group)) + 
@@ -91,23 +94,22 @@ ggplot(data = sfn, aes(x = long, y = lat, group = group)) +
 
 # names(sfn)
 sfn.f <- sfn %>% fortify(region = 'zip')
-names(sfn)
-# I do not understand this line
-head(sfn@data)
+
+# I need to learn more about this line
 SFNeighbourhoods <- merge(sfn.f, sfn@data, by = 'id')
-#SFNeighbourhoods <- SFNeighbourhoods[,-15]
-head(SFNeighbourhoods)
+
+# possibly should do a full merge so none get dropped
 sf <- merge(SFNeighbourhoods, by_neighborhood, 
             by.x = 'id', by.y= 'zipcode') %>%
     arrange(order)
-head(sf)
+
 
 ggplot(sf, aes(long, lat, group = group)) + 
-    geom_polygon(aes(fill = neighborhood))
+    geom_polygon(aes(fill = athletic_fields))
 
 
 ggmap(map) + 
-    geom_polygon(aes(fill = neighborhood, x = long, y = lat, group = group), 
+    geom_polygon(aes(fill = athletic_fields, x = long, y = lat, group = group), 
                  data = sf,
                  alpha = 0.8, 
                  color = "black",
