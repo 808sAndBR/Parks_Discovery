@@ -11,16 +11,48 @@ library(rgdal)
 library(ggplot2)
 library(ggmap)
 library(maptools)
-
+library(RSQLite)
 ```
 
 ### Getting the data
 
+Aquiring all of the data for this project has been a somewhat hillarious process.
+I was able to get a list of all the city parks with some information about each 
+of them from SF's fantastic data portal: 
 https://data.sfgov.org/Culture-and-Recreation/Recreation-Park-Department-Park-Info-Dataset/z76i-7s65
 
-http://sfparkscores.weebly.com/feature-scores.html
+This need some minor cleanup mostly around malformed json in the location field 
+for some parks, but I'm told they will be releasing a clean updated version 
+soon!
 
-https://public.tableau.com/vizql/w/ParkScoresv4/v/Features/viewData/sessions/1D8A178C40944FBC93011B5CB095BE4E-0:0/views/4120671465633930416_17547768605657168597?maxrows=200
+This gave me the size of the park, location, and what type of park it is but not
+much about the sort of things that make people love parks. Luckly Jason showed
+me a site where SF Parks scores the features in parks and present it to the
+public in tableau. http://sfparkscores.weebly.com/feature-scores.html After some
+currious clicksploration I figured out how to download the raw data from tableau.
+
+This was awesome because I'm able to assume that any feature they rate exists, 
+and they rate every park at least once a year so I should have all the features.
+As you may expect, getting all of the park names matched up with one another was
+a circus it but gave me some nice regex practice. 
+
+The rest of the data collection was actaully pretty painless, with shapefiles
+for plotting neighborhoods/zipcodes coming from the SF data portal:
+https://data.sfgov.org/Geographic-Locations-and-Boundaries/San-Francisco-ZIP-Codes-Zipped-Shapefile-Format-/9q84-kc2y
+
+### Add something here about the elivation API if I end up doing that.
+
+Presidio is part of the Golden Gate National Recreation Area, technically a 
+national park. Should find a way to get its info.
+
+For some reason none of the mission bay parks are included:
+Bay front park?
+Mission Bay Commons Park?
+China Basin Park?
+Mission Creek Park?
+
+Are the area codes wrong? I should reverse geocode the lat long and see
+what address I get.
 
 ```{r, echo=FALSE}
 sqlite <- dbDriver("SQLite")
@@ -47,7 +79,30 @@ park_data <- merge(parks, attrib_grid,  by= "id", all = TRUE)
 park_data[is.na(park_data)] <- 0
 
 park_data <- merge(zip2hood, park_data, on = "neighborhood")
-View(park_data)
+```
+
+```{r, echo = FALSE, eval=FALSE}
+# check zip by reverse geocode
+
+rev_addresses <- mapply(function(lon, lat) {
+                        revgeocode(c(lon,lat))
+                    },
+                    park_data$longitude, park_data$latitude)
+
+rev_zips <- gsub(".*CA ","", rev_addresses) %>%
+    gsub(", .*","",.)
+
+diff_zip <- park_data[!(rev_zips == park_data$zipcode),]
+
+diff_zip['rev_zip'] <- rev_zips[!(rev_zips == park_data$zipcode)]
+
+View(select(diff_zip, name, zipcode, rev_zip))
+
+park_data[124,]
+rev_addresses[124]
+
+park_data[188,]
+rev_addresses[188]
 ```
 
 
@@ -70,19 +125,19 @@ by_neighborhood <- group_by(park_data, neighborhood, zipcode) %>%
               child_areas = sum(Children.s.Play.Areas)/count,
               courts = sum(Outdoor.Courts)/count,
               athletic_fields = sum(Athletic.Fields)/count,
-              garden = sum(Community.Garden)/count,
-              mini_parks = sum(Mini.Park)/count,
+              #garden = sum(Community.Garden)/count,
+              #mini_parks = sum(Mini.Park)/count,
               seating = sum(Table.Seating.Areas)/count) %>%
     arrange(desc(count))
 
 ```
 
 ```{r, echo=FALSE}
-map<-get_map(location='san francisco', zoom=12, maptype='roadmap')
-ggmap(map)
-ggmap(map)+
-    geom_point(aes(x=longitude, y=latitude),
-                      data=park_data)
+# map<-get_map(location='san francisco', zoom=12, maptype='roadmap')
+# ggmap(map)
+# ggmap(map)+
+#     geom_point(aes(x=longitude, y=latitude),
+#                       data=park_data)
 
 # Guide I used 
 #http://www.markhneedham.com/blog/2014/11/17/r-ggmap-overlay-shapefile-with-filled-polygon-of-regions/
@@ -104,16 +159,48 @@ sf <- merge(SFNeighbourhoods, by_neighborhood,
     arrange(order)
 
 
-ggplot(sf, aes(long, lat, group = group)) + 
-    geom_polygon(aes(fill = athletic_fields))
+#ggplot(sf[sf$neighborhood== "St Francis Wood",], aes(long, lat, group = group))+
+#    geom_polygon(aes(fill = neighborhood))
+
+# ggplot(sf, aes(long, lat, group = group))+
+#    geom_polygon(aes(fill = dog_areas))
+```
 
 
+```{r, echo=FALSE}
 ggmap(map) + 
     geom_polygon(aes(fill = athletic_fields, x = long, y = lat, group = group), 
                  data = sf,
-                 alpha = 0.8, 
-                 color = "black",
+                 alpha = 0.8,
                  size = 0.2)
+```
+
+
+```{r, echo=FALSE}
+ggmap(map) + 
+    geom_polygon(aes(fill = dog_areas, x = long, y = lat, group = group), 
+                 data = sf,
+                 alpha = 0.8,
+                 size = 0.2)
+```
+
+```{r, echo = FALSE}
+ggmap(map) + 
+    geom_polygon(aes(fill = child_areas, x = long, y = lat, group = group), 
+                 data = sf,
+                 alpha = 0.8,
+                 size = 0.2)
+```
+
+```{r, echo=FALSE}
+by_neighborhood_plus <- unique(sf[,-1:-11])
+
+by_neighborhood_plus[((by_neighborhood_plus$tot_acreage * .00156)/by_neighborhood_plus$sqmi)>1,]
+#hahahahah all of GGP is going in cole valley. gotta fix
+
+
+
+by_neighborhood_plus$neighborhood       
 ```
 
 
@@ -121,7 +208,11 @@ ggmap(map) +
 Acres of park per mile in each neighborhood (need to map back to zip, file 
 needed is in data dir)
 
-Decide how to deal with Golden gate park more eligantly 
+Decide how to deal with Golden gate park more eligantly (actually I think the
+area codes are off. Reverse geocoding them might take care of this.)
+
+Are there no city parks in the embarkacadero, the little square thats missing, or that pier area?
+- may be area code problem, besides mission rock.. idk whats up with that
 
 why no review of these parks (or did I drop them at some point)?
 UPDATE: I think I fixed this but should confirm
