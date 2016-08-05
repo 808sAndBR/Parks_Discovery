@@ -96,8 +96,13 @@ diff_zip <- park_data[!(rev_zips == park_data$zipcode),]
 
 diff_zip['rev_zip'] <- rev_zips[!(rev_zips == park_data$zipcode)]
 
+# Need to manually look all of these up and label correctly.
 View(select(diff_zip, name, zipcode, rev_zip))
-
+looked_up_zips <- c(94114, 94105, 94105, 94105, 94102, 94115, 94122, 94134,
+                    94116, 94132, 94132, 94109, 94122, 94116, 94118, 94127,
+                    94122, 94122, 94122, 94114)
+# These two sets didnt get addresses with zip codes in the reverse geocode from
+# gmaps will manually check.
 park_data[124,]
 rev_addresses[124]
 
@@ -206,16 +211,16 @@ by_neighborhood_plus$neighborhood
 
 ### Todo:
 Acres of park per mile in each neighborhood (need to map back to zip, file 
-needed is in data dir)
+needed is in data dir) - done 
 
 Decide how to deal with Golden gate park more eligantly (actually I think the
-area codes are off. Reverse geocoding them might take care of this.)
+area codes are off. Reverse geocoding them might take care of this.) - done
 
-Are there no city parks in the embarkacadero, the little square thats missing, or that pier area?
-- may be area code problem, besides mission rock.. idk whats up with that
+Are there no city parks in
+- The Presidio (It is a national park),
+- The little square that is missing (Need to double check with area codes)
+- Mission Bay/China Basin area (Weirdly missing, might be newer than data set)
 
-why no review of these parks (or did I drop them at some point)?
-UPDATE: I think I fixed this but should confirm
 parks$name[!(parks$name %in% park_data$name)]
 
 Can I pull in elevation data to guess which parks have the best views?
